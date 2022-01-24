@@ -1,0 +1,75 @@
+#!/bin/sh
+s() {
+  n=$1; i=1; while [ "$n" -le $2 ]; do
+    echo "$n"; : $((n+=i))
+  done
+} # seq
+fd() { # return first digit of $1
+  x="$1"; until [ "${#x}" -eq 1 ]; do
+    x="${x%?}"
+  done
+  echo "$x"
+}
+ld() { # $1/$2
+  di="$1"; div="$2"; count="$3"; : $((count-=1))
+  case "$div" in
+    *'.'*)
+      sp=0; sdiv="${div%%.*}"; IFS="."; set -- ${div}; div="${1}${2}"; unset IFS
+      sp="$((${#div}-${#sdiv}))"
+  esac
+  # determine where the decimal point is -- if present
+  case "$di" in
+    *'.'*)
+      dp=0; t="$di"; while :; do # use while true + case/break
+        t="${t#?}"; : $((dp+=1))
+        case "$t" in
+          '.'*) break
+        esac
+      done
+      ;;
+    *) dp=0
+  esac
+  [ "$dp" -gt 0 ] && {
+    IFS="."; set -- ${di}; di="${1}${2}"; unset IFS
+  }
+  [ "$sp" ] && {
+    ss="${#di}"; : $((ss-=dp)); : $((ss+=sp)); : $((ss+=1))
+    until [ "${#di}" -eq "$ss" ]; do
+      di="${di}0"
+    done
+  }
+  o="$((di/div))"; dp="${#o}"; [ "${#o}" -eq 0 ] && : $((count+=2)) 
+  : $((count+=${#o})); until [ "${#di}" -eq "$count" ]; do
+    di="${di}0"
+  done
+  unset IFS o; for i in $(s 1 $count); do
+    fd="$(fd $di)" # fd is needed later
+   #echo "$fd"
+    [ "$i" -gt 1 ] && {
+      fd="${sd}${fd}"
+      #echo "$fd"
+    }
+    sd="$((fd/div))"; o="${o}${sd}"; sd="$((sd*div))"; sd="$((fd-sd))"
+    [ "$sd" -eq 0 ] && break
+    # now pull down # redefine $di
+    di="${di#?}" # $fd$sd
+  done
+  until [ "${o#0}" = "$o" ]; do
+    o="${o#0}"
+  done
+  [ "$dp" -gt 0 ] && {
+    [ "$t" ] || : $((dp+=1))
+    [ "$sp" -o "$t" ] && : $((dp-=1))
+    [ "$((di/div))" -eq 0 ] && o="0$o"
+    do="$o"; until [ "${#do}" -eq "$dp" ]; do
+      do="${do%?}"
+    done
+    o="$do.${o#$do}"
+  }
+  until [ "${o#0}" = "$o" ]; do
+    o="${o#0}"
+  done
+  echo "$o"
+}
+# 9 decimal points unless $3 is passed
+[ "$1" -a "$2" ] && ld "$1" "$2" "${3:-9}"
