@@ -11,7 +11,7 @@ fd() { # return first digit of $1
   echo "$x"
 }
 ld() { # $1/$2
-  di="$1"; div="$2"; count="$3"; : $((count-=1))
+  di="$1"; div="$2"; count="$3"
   case "$div" in
     *'.'*)
       sp=0; sdiv="${div%%.*}"; IFS="."; set -- ${div}; div="${1}${2}"; unset IFS
@@ -44,7 +44,7 @@ ld() { # $1/$2
   done
   unset IFS o; for i in $(s 1 $count); do
     fd="$(fd $di)" # fd is needed later
-   #echo "$fd"
+    #echo "$fd"
     [ "$i" -gt 1 ] && {
       fd="${sd}${fd}"
       #echo "$fd"
@@ -54,19 +54,23 @@ ld() { # $1/$2
     # now pull down # redefine $di
     di="${di#?}" # $fd$sd
   done
+  #echo "$fd $di $div"
   until [ "${o#0}" = "$o" ]; do
     o="${o#0}"
   done
   [ "$dp" -gt 0 ] && {
     [ "$t" ] || : $((dp+=1))
     [ "$sp" -o "$t" ] && : $((dp-=1))
-    [ "$((di/div))" -eq 0 ] && o="0$o"
+    [ "$((di/div))" -eq 0 ] && {
+      o="0$o"
+    }
     do="$o"; until [ "${#do}" -eq "$dp" ]; do
       do="${do%?}"
     done
-    o="$do.${o#$do}"
+    [ "$1" -lt "$2" ] && do="${do%?}"
+    o="${do:-0}.${o#$do}"
   }
-  until [ "${o#0}" = "$o" ]; do
+  [ "$1" -lt "$2" ] || until [ "${o#0}" = "$o" ]; do
     o="${o#0}"
   done
   echo "$o"
