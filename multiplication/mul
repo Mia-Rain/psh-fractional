@@ -1,0 +1,36 @@
+#!/bin/sh
+# $1 * $2
+# count the total decimal places
+countd() {
+  m="$1"; n=${2:-0}; while [ "$m" ]; do
+    : $((n+=1))
+    next="${m%?}"
+    [ "${m#$next}" = "." ] && {
+      break
+    } || {
+      m="$next"
+    }
+  done
+  echo "$n"
+}
+dn=$(countd "$2" $(countd "$1")); [ "$dn" -gt 0 ] && : $((dn-=2)) # decimal count
+# remove all decimal places
+set -- "${1%.*}${1#*.}" "${2%.*}${2#*.}"
+m="$2"; n=0; while [ "$m" ]; do
+  next="${m%?}" # current is ${m#$next}
+  z=""; zn=0; until [ "$zn" -eq "$n" ]; do
+    z="${z}0"
+    : $((zn+=1))
+  done
+  o="$((o+$((${m#$next}*$1))$z))"
+  m="$next"
+  : $((n+=1))
+done # long multiplication
+# add back decimal point using $dn
+n=0; m="$o"; [ "$dn" -gt 0 ] && while [ "$m" ]; do
+  next="${m%?}"
+  : $((n+=1))
+  [ "$n" -eq "$dn" ] && o="$next.${o#${m%?}}"
+  m="$next"
+done
+echo "$o"
