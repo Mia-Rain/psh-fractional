@@ -2,30 +2,35 @@
 # $1 * $2
 # count the total decimal places
 countd() {
-  m="$1"; n=${2:-0}; while [ "$m" ]; do
-    : $((n+=1))
-    next="${m%?}"
-    [ "${m#$next}" = "." ] && {
-      break
-    } || {
-      m="$next"
-    }
-  done
+  [ -z "${1##*.*}" ] && {
+    m="$1"; n=${2:-0}; while [ "$m" ]; do
+      : $((n+=1))
+      next="${m%?}"
+      [ "${m#$next}" = "." ] && {
+        break
+      } || {
+        m="$next"
+      }
+    done
+  } || n=1
   echo "$n"
 }
-dn=$(countd "$2" $(countd "$1")); [ "$dn" -gt 0 ] && : $((dn-=2)) # decimal count
+[ -z "${1##*.*}" -o -z "${2##*.*}" ] || { # if not floats
+  echo "$(($1*$2))"
+  exit 0
+}
+dn=$(countd "$2" $(countd "$1")); [ "$dn" -gt 2 ] && : $((dn-=2)) # decimal count
+#echo "$dn | $(countd $1) -- $(countd $2)"
 # remove all decimal places
-set -- "${1%.*}${1#*.}" "${2%.*}${2#*.}"
-m="$2"; n=0; while [ "$m" ]; do
-  next="${m%?}" # current is ${m#$next}
-  z=""; zn=0; until [ "$zn" -eq "$n" ]; do
-    z="${z}0"
-    : $((zn+=1))
-  done
-  o="$((o+$((${m#$next}*$1))$z))"
-  m="$next"
-  : $((n+=1))
-done # long multiplication
+if [ ! -z "${1##*.*}" ]; then # if $1 is not float
+  set -- "$1" "${2%.*}${2#*.}"
+elif [ ! -z "${2##*.*}" ]; then
+  set -- "${1%.*}${1#*.}" "$2"
+else
+  set -- "${1%.*}${1#*.}" "${2%.*}${2#*.}"
+fi
+#echo "$1 * $2"
+o="$(($1*$2))"
 # add back decimal point using $dn
 n=0; m="$o"; [ "$dn" -gt 0 ] && while [ "$m" ]; do
   next="${m%?}"
