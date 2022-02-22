@@ -32,39 +32,68 @@ ld() { # $1/$2
   [ "$dp" -gt 0 ] && {
     IFS="."; set -- ${di}; di="${1}${2}"; unset IFS
   }
+  #echo "$sp $div ${di}/${#di}"
   [ "$sp" ] && {
     ss="${#di}"; : $((ss-=dp)); : $((ss+=sp)); : $((ss+=1))
-    until [ "${#di}" -eq "$ss" ]; do
-      di="${di}0"
+    until [ "${#div}" -eq "$ss" ]; do
+      div="${div}0"
     done
   }
-  o="$((di/div))"; dp="${#o}"; [ "${#o}" -eq 0 ] && : $((count+=2)) 
-  : $((count+=${#o})); until [ "${#di}" -eq "$count" ]; do
+  #echo "-"
+  o="$((di/div))"; dp="${#o}"
+  [ "${#o}" -eq 0 ] && : $((count+=2)) 
+  : $((count+=${#o}))
+  until [ "${#di}" -eq "$count" ]; do
     di="${di}0"
   done
-  unset IFS o; for i in $(s 1 $count); do
+  set -- "$1" "$2" "${3:-9}" "$di" "$sd"
+  unset IFS o; n=0; for i in $(s 1 $count); do
     fd="$(fd $di)" # fd is needed later
-    #echo "$fd"
+    #echo "$fd"; 
     [ "$i" -gt 1 ] && {
       fd="${sd}${fd}"
       #echo "$fd"
     }
-    sd="$((fd/div))"; o="${o}${sd}"; sd="$((sd*div))"; sd="$((fd-sd))"
-    [ "$sd" -eq 0 ] && break
+    sd="$((fd/div))"; [ "$sd" -eq 0 ] && : $((count+=1))
+    o="${o}${sd}"; sd="$((sd*div))"
+    #printf "  %s\n- %s\n" "$fd" "$sd"
+    sd="$((fd-sd))"
+    #echo "| $sd"
+    [ "$sd" -eq 0 ] && {
+      n=0
+      break
+    }
     # now pull down # redefine $di
     di="${di#?}" # $fd$sd
+    : $((n+=1))
   done
-  #echo "$fd $di $div"
+  [ "$n" -gt 0 ] && {
+    count=$((count+n))
+  } || count=0
+  #echo "$fd $di/$4 - $div / $dp -- $sp | $count"
+  # do again if $((count-n)) is > 0
+  [ "$count" -gt 0 ] && {
+    di="$4"; sd="$5"; o=""; until [ "${#di}" -eq "$count" ]; do
+      di="${di}0"
+    done
+    for i in $(s 1 $count); do
+      fd="$(fd $di)" # fd is needed later
+      [ "$i" -gt 1 ] && fd="${sd}${fd}"
+      sd="$((fd/div))"; o="${o}${sd}"; sd="$((sd*div))"; sd="$((fd-sd))"
+      [ "$sd" -eq 0 ] && break
+      di="${di#?}"
+    done
+  }
   until [ "${o#0}" = "$o" ]; do
     o="${o#0}"
   done
-  [ "$dp" -gt 0 ] && {
+  [ "$dp" -gt 0 -a "$fd" -ne "$1" ] && {
     [ "$t" ] || : $((dp+=1))
-    [ "$sp" -o "$t" ] && : $((dp-=1))
-    [ "$((di/div))" -eq 0 ] && {
-      o="0$o"
-    }
-    do="$o"; until [ "${#do}" -eq "$dp" ]; do
+    [ "$t" ] && : $((dp-=1))
+    [ "$sp" ] && : $((dp+=1))
+    [ "${sp:-0}" -gt 1 ] && : $((dp+=1))
+    #echo "$o $dp/$sp | ${#o}"
+    do="$o"; [ "${#do}" -gt "$dp" ] && until [ "${#do}" -eq "$dp" ]; do
       do="${do%?}"
     done
     [ "$1" -lt "$2" ] && do="${do%?}"
@@ -73,7 +102,7 @@ ld() { # $1/$2
   [ "$1" -lt "$2" ] || until [ "${o#0}" = "$o" ]; do
     o="${o#0}"
   done
-  echo "$o"
+  echo "$o" # | $dp | $do"
 }
 # 9 decimal points unless $3 is passed
 [ "$1" -a "$2" ] && ld "$1" "$2" "${3:-9}"
