@@ -115,5 +115,6 @@ borrow(){
       f1="$next"
     done
   }
-  echo "${nr}$o" # $nr is for negative handling
+  [ "${o%%.*}" -ne 0 ] && o="${o#0}"
+  echo "${nr}${o}" # $nr is for negative handling
 } || echo $(($1-$2)) # NOT float
