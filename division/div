@@ -23,6 +23,7 @@ countd() { # count decimal places
   echo "$n"
 }
 ld() { # $1/$2
+
   if [ ! -z "${1##*.*}" -a -z "${2##*.*}" ]; then
     di="${1}."; until [ "${#di}" -eq "$((${#2}+1))" ]; do
       di="${di}0"
@@ -34,58 +35,48 @@ ld() { # $1/$2
     done
     set -- "$1" "$div" "$3"
   fi
+
   [ -z "${1##*.*}" -o -z "${2##*.*}" ] || {
     set -- "$1.00" "$2.00" "$3"
   }
+
   di="${1##*.}"; div="${2##*.}"
-  until [ "${#di}" -ge 2 ]; do
+  until [ "${#di}" -ge "${#div}" ]; do
     di="${di}0"
   done
-  until [ "${#div}" -ge 2 ]; do
+  until [ "${#div}" -ge "${#di}" ]; do
     div="${div}0"
   done
   set -- "${1%%.*}.$di" "${2%%.*}.$div" "$3"
   # handle decimal less numbers
+
   #echo "$1/$2"
+
   di="$1"; div="$2"; count="$3"
   case "$div" in
-    *'.'*)
-      sp=0; sdiv="${div%%.*}"; IFS="."; set -- ${div}; div="${1}${2}"; unset IFS
-      sp="$((${#div}-${#sdiv}))"
-  esac
-  # determine where the decimal point is -- if present
-  case "$di" in
-    *'.'*)
-      dp=1; t="$di"; while :; do # use while true + case/break
-        t="${t#?}"; : $((dp+=1))
-        case "$t" in
-          '.'*) break
-        esac
+    *'.'*) # if $2 has a decimal we must shift
+      set -- "${1%.*}${1#*.}" "${2%.*}${2#*.}" "$3" # shift $2 # simply remove the decimal point
+      until [ "${#1}" -ge "${#2}" ]; do
+        set -- "${1}0" "$2" "$3"
       done
-      ;;
-    *) dp=0
+      set -- "$1.00" "$2" "$3" # add decimals back in for $1 only
   esac
-  [ "$dp" -gt 0 ] && {
-    IFS="."; set -- ${di}; di="${1}${2}"; unset IFS
-  }
+  #echo "$1 $2"
+  di="$1"; div="$2"; count="$3" # redeclare
   #echo "$sp $div ${di}/${#di} | $1/$2 | $di/$div"
-  [ "$sp" ] && {
-    ss="${#di}"; : $((ss-=dp)); : $((ss+=sp)); : $((ss+=1))
-    until [ "${#div}" -eq "$ss" ]; do
-      div="${div}0"
-    done
-  }
-  #echo "-"
-  o="$((di/div))"; dp="${#o}"
-  [ "${#o}" -eq 0 ] && : $((count+=2)) 
-  : $((count+=${#o}))
-  until [ "${#di}" -eq "$count" ]; do
+  o="$((${di%.*}/${div%.*}))"; [ "${#o}" -eq 0 ] && : $((count+=2)); : $((count+=${#o}))
+  sd="${di%.*}"; : $((count+=${#sd}));
+  until [ "${#di}" -eq "$((count+1))" ]; do
     di="${di}0"
   done
-  set -- "$1" "$2" "${3:-9}" "$di" "$sd"
+  : $((count-=1)) && di="${di%0}"
+  set -- "$1" "$2" "${3:-9}" "$di"
   unset IFS o; n=0; for i in $(s 1 $count); do
     fd="$(fd $di)" # fd is needed later
-    #echo "$fd"; 
+    [ "$fd" = '.' ] && {
+      dp="$n"
+      di="${di#?}"; fd="$(fd $di)" 
+    }
     [ "$i" -gt 1 ] && {
       fd="${sd}${fd}"
       #echo "$fd"
@@ -94,72 +85,31 @@ ld() { # $1/$2
     o="${o}${sd}"; sd="$((sd*div))"
     #printf "  %s\n- %s\n" "$fd" "$sd"
     sd="$((fd-sd))"
-    #echo "| $sd"
-    [ "$sd" -eq 0 ] && {
-      n=0
-      break
-    }
-    # now pull down # redefine $di
+    #echo "| $sd -- $i"
     di="${di#?}" # $fd$sd
     : $((n+=1))
   done
-  [ "$n" -gt 0 ] && {
-    count=$((count+n))
-  } || count=0
-  #echo "$fd $di/$4 - $div / $dp -- $sp | $count"
-  # do again if $((count-n)) is > 0
-  [ "$count" -gt 0 ] && {
-    di="$4"; sd="$5"; o=""; until [ "${#di}" -eq "$count" ]; do
-      di="${di}0"
-    done
-    for i in $(s 1 $count); do
-      fd="$(fd $di)" # fd is needed later
-      [ "$i" -gt 1 ] && fd="${sd}${fd}"
-      sd="$((fd/div))"; o="${o}${sd}"; sd="$((sd*div))"; sd="$((fd-sd))"
-      [ "$sd" -eq 0 ] && break
-      di="${di#?}"
-    done
-  }
+  n=0; sd="$o"; while [ "$sd" ]; do
+    next="${sd#?}"
+    [ "$n" -eq "$dp" ] && {
+      o="${o%$sd}.$sd"
+      break
+    }
+    sd="$next"
+    : $((n+=1))
+  done
   until [ "${o#0}" = "$o" ]; do
     o="${o#0}"
   done
-  [ "$dp" -gt 0 -a "$fd" -ne "$1" ] && {
-    [ "$t" ] || : $((dp+=1))
-    [ "$t" ] && : $((dp-=1))
-    #[ "$sp" ] && : $((dp+=1))
-    [ "${sp:-0}" -gt 1 ] && : $((dp+=1))
-    #echo "$o $dp/$sp | ${#o}"
-    do="$o"; [ "${#do}" -gt "$dp" ] && until [ "${#do}" -eq "$dp" ]; do
-      do="${do%?}"
-    done
-    o="${do:-0}.${o#$do}"
-  }
-  [ "$1" -lt "$2" ] || until [ "${o#0}" = "$o" ]; do
-    o="${o#0}"
-  done
-  [ "$dp" -eq 0 ] && dp="$sp"
-  fd="$o"; until [ "${#fd}" -eq 1 ]; do
-    fd="${fd%?}"
-  done
-  [ "$fd" -ne "$(($1/${div%$2}))" ] && if [ "$fd" -ne "$(($1/${div%$2} +1))" -a "$fd" -ne "$(($1/${div%$2} -1))" ]; then
-    o="${o%.*}${o#*.}"; o="$(($1/${div%$2})).$o"
-  fi
+  #echo "$o"
   if [ ! -z "${o##*.*}" -a "$dp" -gt 0 ]; then # missing decimal place
     do="$o"; [ "${#do}" -gt "$dp" ] && until [ "${#do}" -eq "$dp" ]; do
       do="${do%?}"
     done
     o="${do:-0}.${o#$do}"
-  else # confirm that decimal is in right place
-    #cd="$(countd $o)"
-    cd="${o%%.*}"; [ "${#cd}" -ne "$dp" ] && {
-      [ -z "${o##*.*}" ] && o="${o%.*}${o#*.}"
-      do="$o"; [ "${#do}" -gt "$dp" ] && until [ "${#do}" -eq "$dp" ]; do
-        do="${do%?}"
-      done
-      o="${do:-0}.${o#$do}"
-    }
   fi
-  echo "$o" #| $1/$2  | $dp/$sp -- $t | $do || $fd $1"
+  [ "$(fd $o)" = '.' ] && o="0$o"
+  echo "$o" # | $1/$2 | $dp | $do || $fd $1"
 }
 # 9 decimal points unless $3 is passed
 [ "$1" -a "$2" ] && ld "$1" "$2" "${3:-9}"
