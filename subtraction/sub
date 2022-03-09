@@ -1,124 +1,61 @@
 #!/bin/sh
-# long subtraction !?
-# $f1 - $f2
-countd() { # count decimal places
-  m="$1"; n=${2:-0}; while [ "$m" ]; do
-    : $((n+=1))
+rad(){ # add decimal to $1 based on $2
+# literal reverse of what ad() from multiplication/mul does
+  m="$1"; n=0; while [ "$m" ]; do
+    next="${m#?}"
+    [ "$n" -eq "$2" ] && break
+    e="${e}${m%$next}"
+    m="$next"; : $((n+=1))
+  done
+  w="${1#$e}"; echo "${3}${e}.${w:-0}"
+}
+fd() {
+  m="$1"; n=1; while [ "$m" ]; do
     next="${m%?}"
-    [ "${m#$next}" = "." ] && {
+    [ "$n" -eq "${#1}" ] && {
+      echo "${m%next}"
       break
-    } || {
-      m="$next"
     }
+    : $((n+=1)); m="$next"
   done
-  echo "$n"
 }
-borrow(){
-  # $2 current number (to increase) 
-  # $1 as whole number; will return modified
-  # $3 as $next
-  b="${1%$2}"; b="${b#${3%?}}"
-  [ "$b" -gt 0 ] && {
-    c1="$2";
-    o="${1%$b$2}"; #echo "++ ${o} $((b-1)) $((c1+90))/$c1"
-    [ "$b" -eq 10 ] && {
-      : $((b-=1)); o="${o}0${b}$c1" # eg 21 = 2090 10
-      # tbh idk why this works; 2090 should acctually be 1 10 9 10
-      # which somehow becomes 209 10 ? I'm guessing a second borrow call is made
-      # and that somehow corrects it; but again idk; a second borrow call /is/ made
-      # but idk how it corrects it
-    } || {
-      : $((b-=1)); [ "$4" != ":" -a "$4" ] && {
-        o="$o$b$((c1+90))"
-      } || o="$o$b$c1"
-    }
-    : $((c1+=10))
-    echo "$o $c1"
-  } || { # otherwise use recusion
-    o="${1#${3%?}}"; o="${o%$2}"
-    #echo "| $1 $o ${3%?}"
-    borrow "$1" "$o" "${3%?}" "${4}:"
-  }
+[ -z "${1##*.*}" -o -z "${2##*.*}" ] || { # if not floats
+  echo "$(($1-$2))"
+  exit 0
 }
-[ -z "${1##*.*}" -o -z "${2##*.*}" ] && {
-
-  if [ ! -z "${1##*.*}" ]; then # if $1 is not float 
-    zp1="$1"; zp2="${2%.*}${2#*.}"
-  elif [ ! -z "${2##*.*}" ]; then
-    zp1="${1%.*}${1#*.}"; zp2="$2"
-  else
-    zp1="${1%.*}${1#*.}"; zp2="${2%.*}${2#*.}"
-  fi # yank out decimal places to compare
-  if [ "${#zp1}" -gt "${#zp2}" ]; then
-    until [ "${#zp2}" -eq "${#zp1}" ]; do
-      zp2="${zp2}0"
-    done
-  elif [ "${#zp1}" -lt "${#zp2}" ]; then
-    until [ "${#zp1}" -eq "${#zp2}" ]; do
-      zp1="${zp1}0"
-    done
-  fi
-  [ "$zp2" -gt "$zp1" ] && {
-    set -- "$2" "$1"
-    nr=-
-  }
-  # above handles negative results
-  
-  # determine decimal point
-  if [ "${#1}" -gt "${#2}" -a -z "${1##*.*}" ]; then # if $1 has no decimal points it should not be counted
-  # this fixes a but when $1 is longer than $2 but has no decimal points 
-    dn=$(countd "$1")
-  elif [ "${#1}" -lt "${#2}" -a -z "${2##*.*}" ]; then # same here
-    dn=$(countd "$2")
-  else # equal
-    dn=$(countd "$2")
-  fi 
-  zp1="${1%%.*}"; zp2="${2%%.*}"
-  [ "${#zp1}" -gt "${#zp2}" ] && until [ "${#zp1}" -eq "${#zp2}" ]; do
-    set -- "$1" "0$2"
-    zp1="${1%%.*}"; zp2="${2%%.*}"
+if [ ! -z "${1##*.*}" ]; then
+  set -- "${1}.0" "$2"; d="${1#*.}"; d2="${2#*.}"
+  until [ "${#d}" -eq "${#d2}" ]; do
+    set -- "${1}0" "$2"
+    d="${1#*.}"
   done
-  [ "${#zp1}" -lt "${#zp2}" ] && until [ "${#zp1}" -eq "${#zp2}" ]; do
-    set -- "0$1" "$2"
-    zp1="${1%%.*}"; zp2="${2%%.*}"
-  done; unset zp1 zp2
-  [ "$dn" -gt 0 ] && : $((dn-=1))
-  if [ ! -z "${1##*.*}" ]; then # if $1 not float
-    set -- "${1}.0" "$2"
-  elif [ ! -z "${2##*.*}" ]; then
-    set -- "$1" "${2}.0"
-  fi
-  #echo "$1 $2"
-  set -- "${1%.*}${1#*.}" "${2%.*}${2#*.}" # remove decimals
-  f1="$1"; f2="$2"
-  [ "${#f1}" -lt "${#f2}" ] && until [ "${#f1}" -eq "${#f2}" ]; do
-    f1="${f1}0"
+elif [ ! -z "${2##*.*}" ]; then
+  set -- "$1" "${2}.0"; d="${2#*.}"; d2="${1#*.}"
+  until [ "${#d}" -eq "${#d2}" ]; do
+    set -- "$1" "${2}0"
+    d="${2#*.}"
   done
-  [ "${#f1}" -gt "${#f2}" ] && until [ "${#f2}" -eq "${#f1}" ]; do
-    f2="${f2}0"
-  done # 0 padding
-  #echo "$f1 - $f2"
-  while [ "$f1" ]; do
-    while [ "$f2" ]; do # shift over both numbers; double while
-      next1="${f1%?}"; next2="${f2%?}"; c1="${f1#$next1}"; c2="${f2#$next2}"
-      [ "$c1" -lt "$c2" ] && { # regroup
-        b=$(borrow "$f1" "$c1" "$next1")
-        c1="${b#* }"; f1="${b% *}"; next1="${f1%?}"
-        #echo "-- $f1 / $b"
-      }
-      #echo "$c1 - $c2 | $f1 - $f2"
-      o="$((c1-c2))$o" # subtract
-      f1="$next1"; f2="$next2"
-    done
-  done
-  [ "$dn" -gt 0 ] && {
-    n=0; f1="$o"; while [ "$f1" ]; do
-      next="${f1%?}"
-      : $((n+=1))
-      [ "$n" -eq "$dn" ] && o="$next.${o#${f1%?}}"
-      f1="$next"
-    done
-  }
-  [ "${o%%.*}" -ne 0 ] && o="${o#0}"
-  echo "${nr}${o}" # $nr is for negative handling
-} || echo $(($1-$2)) # NOT float
+fi # if $1/$2 is not a float; convert to float
+m1="${1%.*}"; m2="${2%.*}"; if [ "${#m2}" -gt "${#m1}" ]; then
+  dn="${#m2}"
+elif [ "${#m2}" -eq "${#m1}" ]; then
+  dn="${#m1}"
+else
+  dn="${#m1}"; : $((dn+=1))
+fi
+## SWAP IF $1 > $2; negative handling
+m1="${1%.*}${1#*.}"; m2="${2%.*}${2#*.}"
+[ "$m1" -lt "$m2" ] && {
+  set -- "$2" "$1"
+  m1="${1%.*}${1#*.}"; m2="${2%.*}${2#*.}"; nr="-"
+}
+#echo "$m1 $m2 $dn"
+until [ "${m1#0}" = "$m1" ]; do
+  m1="${m1#0}"
+done
+until [ "${m2#0}" = "$m2" ]; do
+  m2="${m2#0}"
+done # dash has issues when numbers have leading 0's
+# zsh,bash,etc don't need this at all
+# and really dash shouldn't either but /shrug
+rad "$((m1-m2))" "$dn" "${nr}"

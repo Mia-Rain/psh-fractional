@@ -1,0 +1,44 @@
+#!/bin/sh
+set -e
+# tests all functions 3 times using numbers generated using $RPATH
+# psh-prng is used here with my testing
+# math is comparred to bc
+fd() {
+  m="$1"; n=1; while [ "$m" ]; do
+    next="${m%?}"
+    [ "$n" -eq "${#1}" ] && {
+      echo "${m%next}"
+      break
+    }
+    : $((n+=1)); m="$next"
+  done
+}
+for i in addition/add subtraction/sub multiplication/mul division/div; do
+  for n in 1 2; do
+    ran="$(fd $(${RPATH}))"; : $((ran-=1)); until [ "$ran" -eq 1 -o "$ran" -eq 0 ]; do
+      ran="$(fd $(${RPATH}))"; : $((ran-=1))
+    done
+    case $ran in
+      0) ran=""; tn="$(${RPATH}).$(${RPATH}) $(${RPATH})";;
+      1) ran=""; tn="$(${RPATH}) $(${RPATH}).$(${RPATH})"
+         ran="$(fd $(${RPATH}))"; : $((ran-=1)); until [ "$ran" -eq 1 -o "$ran" -eq 0 ]; do
+           ran="$(fd $(${RPATH}))"; : $((ran-=1))
+         done
+         case $ran in
+           1) ran=""; tn="${tn% *}.$(${RPATH}) ${tn#* }"
+         esac
+    esac
+    # use random number to determine if number will have decimal place
+    case $i in
+      addition/add) op="+";;
+      subtraction/sub) op="-";;
+      multiplication/mul) op="*";;
+      division/div) op="/"
+    esac
+    aws="$(echo ${tn% *}${op}${tn#* } | bc -l)"; case "$(fd $aws)" in
+      '.') aws="0${aws}"
+    esac
+    printf '  %s\n%s %s\n_____\nbc:  %s\n' "${tn% *}" "$op" "${tn#* }" "$aws"
+    printf 'psh: %s\n\n' "$(${i} ${tn% *} ${tn#* })"
+  done
+done

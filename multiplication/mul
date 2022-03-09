@@ -1,41 +1,50 @@
 #!/bin/sh
-# $1 * $2
-# count the total decimal places
-countd() {
-  [ -z "${1##*.*}" ] && {
-    m="$1"; n=${2:-0}; while [ "$m" ]; do
-      : $((n+=1))
-      next="${m%?}"
-      [ "${m#$next}" = "." ] && {
-        break
-      } || {
-        m="$next"
-      }
-    done
-  } || n=1
+countd() { # count decimal places
+  m="$1"; n=${2:-0}; while [ "$m" ]; do
+    : $((n+=1))
+    next="${m%?}"
+    [ "${m#$next}" = "." ] && {
+      : $((n-=1))
+      break
+    } || {
+      m="$next"
+    }
+  done
   echo "$n"
+}
+ad(){ # add decimal to $1 based on $2
+  m="$1"; n=0; while [ "$m" ]; do
+    next="${m%?}"
+    [ "$n" -eq "$2" ] && break
+    e="${m#$next}${e}"
+    m="$next"; : $((n+=1))
+  done
+  w="${1%$e}"; echo "${w:-0}.$e"
 }
 [ -z "${1##*.*}" -o -z "${2##*.*}" ] || { # if not floats
   echo "$(($1*$2))"
   exit 0
 }
-dn=$(countd "$2" $(countd "$1")); [ "$dn" -gt 2 ] && : $((dn-=2)) # decimal count
-#echo "$dn | $(countd $1) -- $(countd $2)"
-# remove all decimal places
-if [ ! -z "${1##*.*}" ]; then # if $1 is not float
-  set -- "$1" "${2%.*}${2#*.}"
+if [ ! -z "${1##*.*}" ]; then
+  set -- "${1}.0" "$2"; d="${1#*.}"; d2="${2#*.}"
+  until [ "${#d}" -eq "${#d2}" ]; do
+    set -- "${1}0" "$2"
+    d="${1#*.}"
+  done
 elif [ ! -z "${2##*.*}" ]; then
-  set -- "${1%.*}${1#*.}" "$2"
-else
-  set -- "${1%.*}${1#*.}" "${2%.*}${2#*.}"
-fi
-#echo "$1 * $2"
-o="$(($1*$2))"
-# add back decimal point using $dn
-n=0; m="$o"; [ "$dn" -gt 0 ] && while [ "$m" ]; do
-  next="${m%?}"
-  : $((n+=1))
-  [ "$n" -eq "$dn" ] && o="$next.${o#${m%?}}"
-  m="$next"
+  set -- "$1" "${2}.0"; d="${2#*.}"; d2="${1#*.}"
+  until [ "${#d}" -eq "${#d2}" ]; do
+    set -- "$1" "${2}0"
+    d="${2#*.}"
+  done
+fi # if $1/$2 is not a float; convert to float
+dn="$(countd $2 $(countd $1))"; m1="${1%.*}${1#*.}"; m2="${2%.*}${2#*.}"
+until [ "${m1#0}" = "$m1" ]; do
+  m1="${m1#0}"
 done
-echo "$o"
+until [ "${m2#0}" = "$m2" ]; do
+  m2="${m2#0}"
+done # dash has issues when numbers have leading 0's
+# zsh,bash,etc don't need this at all
+# and really dash shouldn't either but /shrug
+ad "$((m1*m2))" "$dn"

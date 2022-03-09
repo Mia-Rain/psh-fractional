@@ -98,9 +98,9 @@ ld() { # $1/$2
     sd="$next"
     : $((n+=1))
   done
-  until [ "${o#0}" = "$o" ]; do
-    o="${o#0}"
-  done
+  #until [ "${o#0}" = "$o" ]; do
+  #  o="${o#0}"
+  #done
   #echo "$o"
   if [ ! -z "${o##*.*}" -a "$dp" -gt 0 ]; then # missing decimal place
     do="$o"; [ "${#do}" -gt "$dp" ] && until [ "${#do}" -eq "$dp" ]; do
@@ -109,7 +109,11 @@ ld() { # $1/$2
     o="${do:-0}.${o#$do}"
   fi
   [ "$(fd $o)" = '.' ] && o="0$o"
+  until [ "${o#0}" = "$o" ]; do
+    o="${o#0}"
+  done
+  [ "$(fd $o)" = '.' ] && o="0${o}"
   echo "$o" # | $1/$2 | $dp | $do || $fd $1"
 }
-# 9 decimal points unless $3 is passed
-[ "$1" -a "$2" ] && ld "$1" "$2" "${3:-9}"
+# 19 decimal points unless $3 is passed # bc uses 19
+[ "$1" -a "$2" ] && ld "$1" "$2" "${3:-19}"

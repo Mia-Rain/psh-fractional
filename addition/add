@@ -2,18 +2,19 @@
 # add $2 to $1 and return
 [ -z "${1##*.*}" -o -z "${2##*.*}" ] && { # if float # dylanaraps/pure-sh-bible#check-if-a-number-is-a-float 
   # modified to check $1 & $2
-  # make sure $1 & $2 are the same length
-  if [ "${#1}" -gt "${#2}" ]; then
-    f2="${2##*.}"; f1="${1##*.}"; until [ "${#f2}" -eq "${#f1}" ]; do
-      f2="${f2}0"
+  if [ ! -z "${1##*.*}" ]; then
+    set -- "${1}.0" "$2"; d="${1#*.}"; d2="${2#*.}"
+    until [ "${#d}" -eq "${#d2}" ]; do
+      set -- "${1}0" "$2"
+      d="${1#*.}"
     done
-    set -- "$1" "${2%%.*}.$f2"
-  elif [ "${#1}" -lt "${#2}" ]; then
-    f1="${1##*.}"; f2="${2##*.}"; until [ "${#f1}" -eq "${#f2}" ]; do
-      f1="${f1}0"
+  elif [ ! -z "${2##*.*}" ]; then
+    set -- "$1" "${2}.0"; d="${2#*.}"; d2="${1#*.}"
+    until [ "${#d}" -eq "${#d2}" ]; do
+      set -- "$1" "${2}0"
+      d="${2#*.}"
     done
-    set -- "${1%%.*}.$f1" "$2"
-  fi   
+  fi # if $1/$2 is not a float; convert to float
   until [ "${#1}" -ge "${#2}" ]; do
     set -- "0$1" "$2"
   done
@@ -23,7 +24,15 @@
   #echo "$1 $2"
   f1="${1##*.}"; f2="${2##*.}" # whole is ${1%.$f1} # dot required
   # eq is $1+$2 -- $f1 + $f2 -- then add $1 & $2
-  wo="$((${1%.$f1}+${2%.$f2}))" # whole digit, this is preset and not redeclared
+  w1="${1%.$f1}"; w2="${2%.$f2}"
+  until [ "${w1#0}" = "$w1" ]; do
+    w1="${w1#0}"
+  done
+  until [ "${w2#0}" = "$w2" ]; do
+    w2="${w2#0}"
+  done # dash has issues when numbers have leading 0's
+  # zsh,bash,etc don't need this at all
+  wo="$((${w1#0}+${w2#0}))" # whole digit, this is preset and not redeclared
   # this is because we may need to carry
   while [ "$f1" ]; do
     while [ "$f2" ]; do
