@@ -36,15 +36,11 @@ elif [ ! -z "${2##*.*}" ]; then
     d="${2#*.}"
   done
 fi # if $1/$2 is not a float; convert to float
-m1="${1%.*}"; m2="${2%.*}"; if [ "${#m2}" -gt "${#m1}" ]; then
-  dn="${#m2}"
-elif [ "${#m2}" -eq "${#m1}" ]; then
-  dn="${#m1}"
-else
-  dn="${#m1}"; : $((dn+=1))
-fi
-## SWAP IF $1 > $2; negative handling
 m1="${1%.*}${1#*.}"; m2="${2%.*}${2#*.}"
+dn=$((${1%.*}-${2%.*})); dn="${dn#-}"; dn="${#dn}"
+# decimal place is determined by the length of $1-$2
+# without decimals
+## SWAP IF $1 > $2; negative handling
 [ "$m1" -lt "$m2" ] && {
   set -- "$2" "$1"
   m1="${1%.*}${1#*.}"; m2="${2%.*}${2#*.}"; nr="-"

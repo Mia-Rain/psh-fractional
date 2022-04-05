@@ -13,32 +13,54 @@ fd() {
     : $((n+=1)); m="$next"
   done
 }
-for i in addition/add subtraction/sub multiplication/mul division/div; do
+ran() {
+  ran="$(${RPATH})"
+  ran="${ran#0.}"
+  until [ "${#ran}" -le 5 ]; do
+    ran="${ran%?}"
+  done
+  echo "${ran}"
+}
+case "$1" in
+  "") types="addition/add subtraction/sub multiplication/mul division/div" ;;
+  *) types="$1"
+esac
+IFS=" "; for i in ${types}; do
   for n in 1 2; do
-    ran="$(fd $(${RPATH}))"; : $((ran-=1)); until [ "$ran" -eq 1 -o "$ran" -eq 0 ]; do
-      ran="$(fd $(${RPATH}))"; : $((ran-=1))
+    ran="$(fd $(ran))"; : $((ran-=1)); until [ "$ran" -eq 1 -o "$ran" -eq 0 ]; do
+      ran="$(fd $(ran))"; : $((ran-=1))
     done
     case $ran in
-      0) ran=""; tn="$(${RPATH}).$(${RPATH}) $(${RPATH})";;
-      1) ran=""; tn="$(${RPATH}) $(${RPATH}).$(${RPATH})"
-         ran="$(fd $(${RPATH}))"; : $((ran-=1)); until [ "$ran" -eq 1 -o "$ran" -eq 0 ]; do
-           ran="$(fd $(${RPATH}))"; : $((ran-=1))
+      0) ran=""; tn="$(ran).$(ran) $(ran)";;
+      1) ran=""; tn="$(ran) $(ran).$(ran)"
+         ran="$(fd $(ran))"; : $((ran-=1)); until [ "$ran" -eq 1 -o "$ran" -eq 0 ]; do
+           ran="$(fd $(ran))"; : $((ran-=1))
          done
          case $ran in
-           1) ran=""; tn="${tn% *}.$(${RPATH}) ${tn#* }"
+           1) ran=""; tn="${tn% *}.$(ran) ${tn#* }"
          esac
     esac
     # use random number to determine if number will have decimal place
     case $i in
-      addition/add) op="+";;
-      subtraction/sub) op="-";;
-      multiplication/mul) op="*";;
-      division/div) op="/"
+      *addition/add) op="+";;
+      *subtraction/sub) op="-";;
+      *multiplication/mul) op="*";;
+      *division/div) op="/"
     esac
     aws="$(echo ${tn% *}${op}${tn#* } | bc -l)"; case "$(fd $aws)" in
       '.') aws="0${aws}"
     esac
     printf '  %s\n%s %s\n_____\nbc:  %s\n' "${tn% *}" "$op" "${tn#* }" "$aws"
-    printf 'psh: %s\n\n' "$(${i} ${tn% *} ${tn#* })"
+    oaws="$aws"; aws="${aws%.*}${aws#*.}"
+    [ "$aws" -ge 9223372036854775807 ] 2>/dev/null && {
+      printf 'psh: too large...\n\n'
+    } || printf 'psh: %s\n' "$(${i} ${tn% *} ${tn#* })"
+    [ "$oaws" = "$(${i} ${tn% *} ${tn#* })" ] && {
+      status=0
+    } || status=1
+    case "$status" in
+      0) printf 'Correct!\n\n' ;;
+      1) printf 'False..\n\n'
+    esac
   done
 done

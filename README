@@ -11,13 +11,13 @@ Dev Status
 ---
 Current Status
 -- addition 100% working
--- subtraction ~80% working
----- has major issues with decimal placement
----- I have no fix for this other than flat out long subtraction
--- multiplication ~50% working
----- has a lot of issues I need to look into
--- division ~80% working 
----- issues with decimal placement
+-- subtraction ~90% working
+---- decimal placement working now
+---- some numbers produce the wrong results... no idea why
+-- multiplication 100% working
+-- division ~90% working 
+---- may sometimes produce to many decimals
+---- rarely places decimals in wrong places
 ---
 Tester
 -- a tester is present at ./tester; it is ofc not pure sh as it compares with bc

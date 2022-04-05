@@ -116,4 +116,4 @@ ld() { # $1/$2
   echo "$o" # | $1/$2 | $dp | $do || $fd $1"
 }
 # 19 decimal points unless $3 is passed # bc uses 19
-[ "$1" -a "$2" ] && ld "$1" "$2" "${3:-19}"
+[ "$1" -a "$2" ] && ld "$1" "$2" "${3:-20}"

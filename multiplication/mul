@@ -19,7 +19,7 @@ ad(){ # add decimal to $1 based on $2
     e="${m#$next}${e}"
     m="$next"; : $((n+=1))
   done
-  w="${1%$e}"; echo "${w:-0}.$e"
+  w="${1%$e}"; echo "${w:-0}.${e%0}"
 }
 [ -z "${1##*.*}" -o -z "${2##*.*}" ] || { # if not floats
   echo "$(($1*$2))"
@@ -27,16 +27,8 @@ ad(){ # add decimal to $1 based on $2
 }
 if [ ! -z "${1##*.*}" ]; then
   set -- "${1}.0" "$2"; d="${1#*.}"; d2="${2#*.}"
-  until [ "${#d}" -eq "${#d2}" ]; do
-    set -- "${1}0" "$2"
-    d="${1#*.}"
-  done
 elif [ ! -z "${2##*.*}" ]; then
   set -- "$1" "${2}.0"; d="${2#*.}"; d2="${1#*.}"
-  until [ "${#d}" -eq "${#d2}" ]; do
-    set -- "$1" "${2}0"
-    d="${2#*.}"
-  done
 fi # if $1/$2 is not a float; convert to float
 dn="$(countd $2 $(countd $1))"; m1="${1%.*}${1#*.}"; m2="${2%.*}${2#*.}"
 until [ "${m1#0}" = "$m1" ]; do
@@ -45,6 +37,8 @@ done
 until [ "${m2#0}" = "$m2" ]; do
   m2="${m2#0}"
 done # dash has issues when numbers have leading 0's
+
 # zsh,bash,etc don't need this at all
 # and really dash shouldn't either but /shrug
+#printf '%s\n%s\n' "${m1}*${m2}" "9223372036854775807"
 ad "$((m1*m2))" "$dn"
