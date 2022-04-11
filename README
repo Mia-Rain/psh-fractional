@@ -23,7 +23,3 @@ Tester
 -- a tester is present at ./tester; it is ofc not pure sh as it compares with bc
 -- additionally using it requires that $RPATH is set to ?/psh-prng/ran
 ---
-Bug/Progress tracking
--- a bug tracker is present at 
----- https://bugs.dicksdeathabove.xyz/~mia/bugs.psh-prng/
----
