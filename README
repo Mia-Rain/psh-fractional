@@ -2,10 +2,6 @@
 psh-fractional
 -- fractional math in pure sh, successor to psh-float-micro
 ---
-Plan
--- The plan here is to devise hackish ways to do fractional math
--- for each of the base operations addition, subtraction, multiplication, & division
----
 Dev Status
 -- this is on pause for now; I'm really tired
 ---
@@ -18,6 +14,12 @@ Current Status
 -- division ~90% working 
 ---- may sometimes produce to many decimals
 ---- rarely places decimals in wrong places
+---
+Outer Usage
+-- it is recommended to use this library with the upcomming
+-- psh-fc if you wish to compare numbers that it produces
+-- as decimal numbers are not considered numbers by posix sh
+---- https://dicksdeathabove.xyz/~mia/psh-fc
 ---
 Tester
 -- a tester is present at ./tester; it is ofc not pure sh as it compares with bc
