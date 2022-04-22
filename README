@@ -2,22 +2,39 @@
 psh-fractional
 -- fractional math in pure sh, successor to psh-float-micro
 ---
-Dev Status
--- this is on pause for now; I'm really tired
----
 Current Status
--- addition 100% working
+-- addition ~85% working
+---- has some odd issues with decimals
+---- has issues with "Illegal number"
+------ eg: 18471.81672 + 27540.27237
+---- will debug at later date
 -- subtraction ~90% working
----- decimal placement working now
----- some numbers produce the wrong results... no idea why
+---- had issues due to an edge case before: see last commit
+---- has an issue where $e in rad() somehow becomes malformed
+------ eg: 23019.18605 - 1139
+------ produces: 11629.18605
+------ correct:  21880.18605
+---- current method uses a system of removing the decimal from $1 & $2
+---- and then subtracting them; (m1-m2)
+---- the issue is likely in rad() as $((m1-m2)) is correct before
+---- being handed to rad()
 -- multiplication 100% working
+---- length issues when comparing to bc (produces additional decimals)
+------ I am not going to attempt to fix this
+------ it's really not an issue
 -- division ~90% working 
 ---- may sometimes produce to many decimals
+------ this will not be fixed
 ---- rarely places decimals in wrong places
+------ eg: 324.81478 / 21715
+------ produces: 1.49580833525212986414
+------ correct:  0.01495808335252129864
+---- Some odd edge case with $dp is causing this...
+---- debugging ongoing
 ---
 Outer Usage
--- it is recommended to use this library with the upcomming
--- psh-fc if you wish to compare numbers that it produces
+-- it is recommended to use this library with psh-fc
+-- if you wish to compare numbers that it produces
 -- as decimal numbers are not considered numbers by posix sh
 ---- https://dicksdeathabove.xyz/~mia/psh-fc
 ---

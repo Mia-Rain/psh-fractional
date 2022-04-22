@@ -37,7 +37,9 @@ elif [ ! -z "${2##*.*}" ]; then
   done
 fi # if $1/$2 is not a float; convert to float
 m1="${1%.*}${1#*.}"; m2="${2%.*}${2#*.}"
-dn=$((${1%.*}-${2%.*})); dn="${dn#-}"; dn="${#dn}"
+dn=$((${1%.*}-${2%.*})); # dn == dp
+# dn can also be checked to see if the wrong whole number result produced is correct
+dn="${dn#-}"; dn="${#dn}"
 # decimal place is determined by the length of $1-$2
 # without decimals
 ## SWAP IF $1 > $2; negative handling
@@ -54,4 +56,9 @@ until [ "${m2#0}" = "$m2" ]; do
 done # dash has issues when numbers have leading 0's
 # zsh,bash,etc don't need this at all
 # and really dash shouldn't either but /shrug
+## 
+# if $m1 is longer than $m2 it may cause it to produce wrong results
+[ -z "${2##*.*}" ] && until [ "${#m2}" -eq "${#m1}" ]; do
+  m2="${m2}0"
+done
 rad "$((m1-m2))" "$dn" "${nr}"

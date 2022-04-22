@@ -60,7 +60,7 @@ IFS=" "; for i in ${types}; do
     } || status=1
     case "$status" in
       0) printf 'Correct!\n\n' ;;
-      1) printf 'False..\n\n'
+      1) printf 'False..\n\n' && exit 1
     esac
   done
 done

@@ -37,8 +37,8 @@ done
 until [ "${m2#0}" = "$m2" ]; do
   m2="${m2#0}"
 done # dash has issues when numbers have leading 0's
-
 # zsh,bash,etc don't need this at all
 # and really dash shouldn't either but /shrug
+
 #printf '%s\n%s\n' "${m1}*${m2}" "9223372036854775807"
 ad "$((m1*m2))" "$dn"

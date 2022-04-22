@@ -63,7 +63,7 @@ ld() { # $1/$2
   esac
   #echo "$1 $2"
   di="$1"; div="$2"; count="$3" # redeclare
-  #echo "$sp $div ${di}/${#di} | $1/$2 | $di/$div"
+  #echo "${sp# } $div ${di}/${#di} | $1/$2 | $di/$div"
   o="$((${di%.*}/${div%.*}))"; [ "${#o}" -eq 0 ] && : $((count+=2)); : $((count+=${#o}))
   sd="${di%.*}"; : $((count+=${#sd}));
   until [ "${#di}" -eq "$((count+1))" ]; do
@@ -81,14 +81,17 @@ ld() { # $1/$2
       fd="${sd}${fd}"
       #echo "$fd"
     }
-    sd="$((fd/div))"; [ "$sd" -eq 0 ] && : $((count+=1))
+    sd="$((fd/div))"
+    #[ "$sd" -eq 0 ] && : $((count+=1))
     o="${o}${sd}"; sd="$((sd*div))"
     #printf "  %s\n- %s\n" "$fd" "$sd"
     sd="$((fd-sd))"
     #echo "| $sd -- $i"
+    #echo "$o $dp"
     di="${di#?}" # $fd$sd
     : $((n+=1))
   done
+  #echo "$o"
   n=0; sd="$o"; while [ "$sd" ]; do
     next="${sd#?}"
     [ "$n" -eq "$dp" ] && {
@@ -98,10 +101,10 @@ ld() { # $1/$2
     sd="$next"
     : $((n+=1))
   done
+  #echo "-- $o"
   #until [ "${o#0}" = "$o" ]; do
   #  o="${o#0}"
   #done
-  #echo "$o"
   if [ ! -z "${o##*.*}" -a "$dp" -gt 0 ]; then # missing decimal place
     do="$o"; [ "${#do}" -gt "$dp" ] && until [ "${#do}" -eq "$dp" ]; do
       do="${do%?}"
