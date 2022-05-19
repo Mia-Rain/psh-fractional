@@ -31,6 +31,8 @@ Current Status
 ------ correct:  0.01495808335252129864
 ---- Some odd edge case with $dp is causing this...
 ---- debugging ongoing
+---- has issue with dividing by numbers <1 (eg 0.5)
+---- I may fix this... idk tbh
 ---
 Outer Usage
 -- it is recommended to use this library with psh-fc

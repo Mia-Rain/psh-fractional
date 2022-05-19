@@ -7,7 +7,8 @@ rad(){ # add decimal to $1 based on $2
     e="${e}${m%$next}"
     m="$next"; : $((n+=1))
   done
-  w="${1#$e}"; echo "${3}${e}.${w:-0}"
+  w="${1#$e}"; o="${3}${e:-0}${w+.$w}"
+  echo "${o%.}"
 }
 fd() {
   m="$1"; n=1; while [ "$m" ]; do
@@ -37,7 +38,10 @@ elif [ ! -z "${2##*.*}" ]; then
   done
 fi # if $1/$2 is not a float; convert to float
 m1="${1%.*}${1#*.}"; m2="${2%.*}${2#*.}"
-dn=$((${1%.*}-${2%.*})); # dn == dp
+dn=$(((${1%.*}-${2%.*}))); # dn == dp
+#until [ ! "$dn" -lt "0" ]; do
+#  : $((dn+=1))
+#done 
 # dn can also be checked to see if the wrong whole number result produced is correct
 dn="${dn#-}"; dn="${#dn}"
 # decimal place is determined by the length of $1-$2
@@ -49,16 +53,18 @@ dn="${dn#-}"; dn="${#dn}"
 }
 #echo "$m1 $m2 $dn"
 until [ "${m1#0}" = "$m1" ]; do
-  m1="${m1#0}"
+  m1="${m1#0}"; rz1=0
 done
 until [ "${m2#0}" = "$m2" ]; do
-  m2="${m2#0}"
+  m2="${m2#0}"; rz2=0
 done # dash has issues when numbers have leading 0's
 # zsh,bash,etc don't need this at all
 # and really dash shouldn't either but /shrug
-## 
-# if $m1 is longer than $m2 it may cause it to produce wrong results
-[ -z "${2##*.*}" ] && until [ "${#m2}" -eq "${#m1}" ]; do
+##
+[ -z "${2##*.*}" -a ! "$rz2" ] && until [ "${#m2}" -eq "${#m1}" ]; do
   m2="${m2}0"
 done
+[ -z "${2##*.*}" -a "$rz2" ] && : $((dn+=1)) 
+nd="$((${1%.*}${1#*.}-${2%.*}${2#*.}))"; [ "${#nd}" -lt "$((${#m1}+1))" ] && : $((dn-=1))
+#echo "$m1 $m2 | $dn ${nr:-+} | ${dn} ${#m1} ${#m2} | $((${1%.*}-${2%.*})) | $((${1%.*}${1#*.}-${2%.*}${2#*.}))"
 rad "$((m1-m2))" "$dn" "${nr}"

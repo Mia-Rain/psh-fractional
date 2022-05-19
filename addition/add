@@ -32,7 +32,8 @@
     w2="${w2#0}"
   done # dash has issues when numbers have leading 0's
   # zsh,bash,etc don't need this at all
-  wo="$((${w1#0}+${w2#0}))" # whole digit, this is preset and not redeclared
+  w1="${w1#0}"; w2="${w2#0}"
+  wo="$((${w1:-0}+${w2:-0}))" # whole digit, this is preset and not redeclared
   # this is because we may need to carry
   while [ "$f1" ]; do
     while [ "$f2" ]; do
