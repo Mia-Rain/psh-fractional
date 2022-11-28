@@ -47,7 +47,7 @@ Outer Usage
 -- it is recommended to use this library with psh-fc
 -- if you wish to compare numbers that it produces
 -- as decimal numbers are not considered numbers by posix sh
----- https://dicksdeathabove.xyz/~mia/psh-fc
+---- ssh://g.posix.gay/psh-fc
 ---
 Tester
 -- a tester is present at ./tester; it is ofc not pure sh as it compares with bc
