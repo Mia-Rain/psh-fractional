@@ -13,6 +13,7 @@ Current Status
 ---- Verified working!
 -- subtraction ~90% working
 ---- had issues due to an edge case before: see last commit
+------ Fixed
 ---- has an issue where $e in rad() somehow becomes malformed
 ------ eg: 23019.18605 - 1139
 ------ produces: 11629.18605
@@ -32,16 +33,12 @@ Current Status
 ---- 200 tests with 0 issues
 ---- Verified working!
 -- division ~90% working 
----- may sometimes produce to many decimals
------- this will not be fixed
----- rarely places decimals in wrong places
------- eg: 324.81478 / 21715
------- produces: 1.49580833525212986414
------- correct:  0.01495808335252129864
----- Some odd edge case with $dp is causing this...
----- debugging ongoing
+---- did produce to many decimals
+------ Fixed
+---- did rarely places decimals in wrong places
+------ Fixed
 ---- has issue with dividing by numbers <1 (eg 0.5)
----- I may fix this... idk tbh
+------ Overflow issue
 ---
 Outer Usage
 -- it is recommended to use this library with psh-fc
@@ -52,4 +49,6 @@ Outer Usage
 Tester
 -- a tester is present at ./tester; it is ofc not pure sh as it compares with bc
 -- additionally using it requires that $RPATH is set to ?/psh-prng/ran
+---- Edited to produce numbers of varying length
+---- Edited to detect some overflow issues
 ---

@@ -24,7 +24,6 @@ countd() { # count decimal places
   echo "$n"
 }
 ld() { # $1/$2
-
   if [ -n "${1##*.*}" -a -z "${2##*.*}" ]; then
     di="${1}."; until [ "${#di}" -eq "$((${#2}+1))" ]; do
       di="${di}0"
@@ -117,7 +116,25 @@ ld() { # $1/$2
     o="${o#0}"
   done
   [ "$(fd $o)" = '.' ] && o="0${o}"
-  echo "$o" # | $1/$2 | $dp | $do || $fd $1"
+  zd1="${org1%.*}"; zd2="${org2%.*}"
+  zd=$((${#zd2}-${#zd1})); [ "$zd" -gt 0 ] && {
+    #oo="$o"
+    wd="${o%.*}"; dd="${o#*.}" # wd = whole digits | dd = decimal digits
+    # break $o apart to add leading 0's to $dd
+    dd="${wd}${dd}"; until [ "${zd}" -eq 1 ]; do
+      dd="0${dd}"
+      : $((zd-=1))
+    done
+    o="0.${dd}" # reconstruct $o 
+  }
+  od="${o#*.}"; until [ "${#od}" -eq "$3" ]; do
+    o="${o%?}"
+    od="${o#*.}" 
+  done
+  echo "$o" #| $org1/$org2 | $wd.$dd -- $oo"
 }
 # 19 decimal points unless $3 is passed # bc uses 19
-[ "$1" -a "$2" ] && ld "$1" "$2" "${3:-20}"
+[ "$1" -a "$2" ] && {
+  org1="$1"; org2="$2"
+  ld "$1" "$2" "${3:-20}"
+}

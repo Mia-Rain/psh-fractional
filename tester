@@ -1,5 +1,5 @@
 #!/bin/sh
-# shellcheck disable=SC2086,SC2046,SC2166
+# shellcheck disable=SC2086,SC2046,SC2166,SC2015
 set -e
 # tests all functions 3 times using numbers generated using $RPATH
 # psh-prng is used here with my testing
@@ -17,6 +17,7 @@ fd() {
 ran() {
   ran="$(${RPATH})"
   ran="${ran#0.}"
+  [ "${1:-5}" -gt 5 ] && set -- 5
   until [ "${#ran}" -le ${1:-5} ]; do
     ran="${ran%?}"
   done
@@ -32,8 +33,8 @@ IFS=" "; for i in ${types}; do
       ran="$(fd $(ran))"; : $((ran-=1))
     done
     case $ran in
-      0) ran=""; tn="$(ran).$(ran 3) $(ran)";;
-      1) ran=""; tn="$(ran) $(ran).$(ran 3)"
+      0) ran=""; tn="$(ran $(ran 1)).$(ran 3) $(ran $(ran 1))";;
+      1) ran=""; tn="$(ran $(ran 1)) $(ran $(ran 1)).$(ran 3)"
          ran="$(fd $(ran))"; : $((ran-=1)); until [ "$ran" -eq 1 -o "$ran" -eq 0 ]; do
            ran="$(fd $(ran))"; : $((ran-=1))
          done
@@ -56,20 +57,32 @@ IFS=" "; for i in ${types}; do
     done
     printf '  %s\n%s %s\n_____\nbc:  %s\n' "${tn% *}" "$op" "${tn#* }" "$aws"
     oaws="$aws"; aws="${aws%.*}${aws#*.}"
-    [ "$aws" -ge 9223372036854775807 ] 2>/dev/null && {
-      printf 'psh: too large...\n\n'
-    } || {
+    #echo "$oaws"
+    state=$(echo "$oaws < 0.00001 || $oaws > 9223372036854775807" |  bc -l)
+
+    case "$state" in
+      1) printf 'psh: too lagre/small...\n' ;;
+      0)
       psha="$(${i} ${tn% *} ${tn#* })"; until [ "${psha%0}" = "${psha}" ]; do 
         psha="${psha%0}"
       done
       printf 'psh: %s\n' "$psha"
-    }
+    esac
     [ "$oaws" = "$psha" ] && {
       status=0
     } || status=1
+    #echo "$state || $(echo "$oaws < 0.000001 || $oaws > 9223372036854775807" |  bc -l)"
+    case "$i" in
+      *multiplication/mul)
+        [ "$state" -ne 1 ] && {
+          state=$(echo "$psha < 0" | bc -l)
+        }
+    esac # overflow case for multiplaction
+    [ "$state" -eq 1 ] && status=2
     case "$status" in
       0) printf 'Correct!\n\n' ;;
-      1) printf 'False..\n\n' && exit 1
+      1) printf 'False..\n\n' && exit 1 ;;
+      2) printf 'Overflow..\n\n';;
     esac
   done
 done
