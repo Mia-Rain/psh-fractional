@@ -1,14 +1,15 @@
 #!/bin/sh
 # add $2 to $1 and return
+# shellcheck disable=SC2086,SC2046,SC2166,SC2015
 [ -z "${1##*.*}" -o -z "${2##*.*}" ] && { # if float # dylanaraps/pure-sh-bible#check-if-a-number-is-a-float 
   # modified to check $1 & $2
-  if [ ! -z "${1##*.*}" ]; then
+  if [ -n "${1##*.*}" ]; then
     set -- "${1}.0" "$2"; d="${1#*.}"; d2="${2#*.}"
     until [ "${#d}" -eq "${#d2}" ]; do
       set -- "${1}0" "$2"
       d="${1#*.}"
     done
-  elif [ ! -z "${2##*.*}" ]; then
+  elif [ -n "${2##*.*}" ]; then
     set -- "$1" "${2}.0"; d="${2#*.}"; d2="${1#*.}"
     until [ "${#d}" -eq "${#d2}" ]; do
       set -- "$1" "${2}0"
@@ -24,7 +25,7 @@
   #echo "$1 $2"
   f1="${1##*.}"; f2="${2##*.}" # whole is ${1%.$f1} # dot required
   # eq is $1+$2 -- $f1 + $f2 -- then add $1 & $2
-  w1="${1%.$f1}"; w2="${2%.$f2}"
+  w1="${1%."$f1"}"; w2="${2%."$f2"}"
   until [ "${w1#0}" = "$w1" ]; do
     w1="${w1#0}"
   done
@@ -35,18 +36,19 @@
   w1="${w1#0}"; w2="${w2#0}"
   wo="$((${w1:-0}+${w2:-0}))" # whole digit, this is preset and not redeclared
   # this is because we may need to carry
-  while [ "$f1" ]; do
-    while [ "$f2" ]; do
-      next2="${f2#?}"; next1="${f1#?}"
-      [ "$((${f1%$next1} + ${f2%$next2}))" -gt 9 ] && {
-        oo="$o"; [ "$o" ] && {
-          : $((oo+=1))
-        } || : $((wo+=1))
-        o="$((${f1%$next1} + ${f2%$next2}))"; o="${o#?}"; o="$oo$o"; unset oo # unset to save ram
-      } || o="$o$((${f1%$next1} + ${f2%$next2}))"
-      f2="$next2"; f1="${next1}" 
+  o="$((f1+f2))"
+  if [ "${#f1}" -ge "${#f2}" ]; then
+    l="${#f1}"
+  elif [ "${#f2}" -ge "${#f1}" ]; then
+    l="${#f2}"
+  fi
+  [ "${#o}" -gt "${l}" ] && {
+    ol=$((${#o}-l)); old="${o}"; until [ "${#old}" -eq "${ol}" ]; do
+      old="${old%?}"
     done
-  done
+    : $((wo+=old))
+    o="${o#"$old"}"
+  }
   echo "$wo.${o:-0}"
 } || { # if not just do basic addition
   echo $(($1+$2))

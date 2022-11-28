@@ -1,9 +1,10 @@
 #!/bin/sh
+# shellcheck disable=SC2086,SC2046,SC2166,SC2015
 countd() { # count decimal places
   m="$1"; n=${2:-0}; while [ "$m" ]; do
     : $((n+=1))
     next="${m%?}"
-    [ "${m#$next}" = "." ] && {
+    [ "${m#"$next"}" = "." ] && {
       : $((n-=1))
       break
     } || {
@@ -16,19 +17,23 @@ ad(){ # add decimal to $1 based on $2
   m="$1"; n=0; while [ "$m" ]; do
     next="${m%?}"
     [ "$n" -eq "$2" ] && break
-    e="${m#$next}${e}"
+    e="${m#"$next"}${e}"
     m="$next"; : $((n+=1))
   done
-  w="${1%$e}"; echo "${w:-0}.${e%0}"
+  w="${1%"$e"}"; o="${w:-0}.${e%0}"
+  until [ "${o%0}" = "${o}" ]; do
+    o="${o%0}"
+  done
+  echo "${o}"
 }
 [ -z "${1##*.*}" -o -z "${2##*.*}" ] || { # if not floats
   echo "$(($1*$2))"
   exit 0
 }
-if [ ! -z "${1##*.*}" ]; then
-  set -- "${1}.0" "$2"; d="${1#*.}"; d2="${2#*.}"
-elif [ ! -z "${2##*.*}" ]; then
-  set -- "$1" "${2}.0"; d="${2#*.}"; d2="${1#*.}"
+if [ -n "${1##*.*}" ]; then
+  set -- "${1}.0" "$2"; # d="${1#*.}"; d2="${2#*.}"
+elif [ -n "${2##*.*}" ]; then
+  set -- "$1" "${2}.0"; # d="${2#*.}"; d2="${1#*.}"
 fi # if $1/$2 is not a float; convert to float
 dn="$(countd $2 $(countd $1))"; m1="${1%.*}${1#*.}"; m2="${2%.*}${2#*.}"
 until [ "${m1#0}" = "$m1" ]; do

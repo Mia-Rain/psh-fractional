@@ -1,13 +1,14 @@
 #!/bin/sh
+# shellcheck disable=SC2086,SC2046,SC2166
 rad(){ # add decimal to $1 based on $2
 # literal reverse of what ad() from multiplication/mul does
   m="$1"; n=0; while [ "$m" ]; do
     next="${m#?}"
-    [ "$n" -eq "$2" ] && break
-    e="${e}${m%$next}"
+    [ "$n" -eq "$(($2+1))" ] && break
+    e="${e}${m%"$next"}"
     m="$next"; : $((n+=1))
   done
-  w="${1#$e}"; o="${3}${e:-0}${w+.$w}"
+  w="${1#"$e"}"; o="${3}${e:-0}${w+.$w}"
   echo "${o%.}"
 }
 fd() {
@@ -24,13 +25,13 @@ fd() {
   echo "$(($1-$2))"
   exit 0
 }
-if [ ! -z "${1##*.*}" ]; then
+if [ -n "${1##*.*}" ]; then
   set -- "${1}.0" "$2"; d="${1#*.}"; d2="${2#*.}"
   until [ "${#d}" -eq "${#d2}" ]; do
     set -- "${1}0" "$2"
     d="${1#*.}"
   done
-elif [ ! -z "${2##*.*}" ]; then
+elif [ -n "${2##*.*}" ]; then
   set -- "$1" "${2}.0"; d="${2#*.}"; d2="${1#*.}"
   until [ "${#d}" -eq "${#d2}" ]; do
     set -- "$1" "${2}0"
@@ -53,10 +54,10 @@ dn="${dn#-}"; dn="${#dn}"
 }
 #echo "$m1 $m2 $dn"
 until [ "${m1#0}" = "$m1" ]; do
-  m1="${m1#0}"; rz1=0
+  m1="${m1#0}"; # rz1=0
 done
 until [ "${m2#0}" = "$m2" ]; do
-  m2="${m2#0}"; rz2=0
+  m2="${m2#0}"; # rz2=0
 done # dash has issues when numbers have leading 0's
 # zsh,bash,etc don't need this at all
 # and really dash shouldn't either but /shrug

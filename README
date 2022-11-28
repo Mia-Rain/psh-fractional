@@ -3,11 +3,14 @@ psh-fractional
 -- fractional math in pure sh, successor to psh-float-micro
 ---
 Current Status
--- addition ~85% working
----- has some odd issues with decimals
----- has issues with "Illegal number"
+-- addition 100% working
+---- had some odd issues with decimals
+---- had issues with "Illegal number"
 ------ eg: 18471.81672 + 27540.27237
----- will debug at later date
+---- carry system was rewritten
+---- issues no longer present
+---- 800+ tests with 0 issues
+---- Verified working!
 -- subtraction ~90% working
 ---- had issues due to an edge case before: see last commit
 ---- has an issue where $e in rad() somehow becomes malformed
@@ -22,6 +25,12 @@ Current Status
 ---- length issues when comparing to bc (produces additional decimals)
 ------ I am not going to attempt to fix this
 ------ it's really not an issue
+---- Issues with larger numbers
+------ Overflow occurs often
+------ ./tester modified to prevent
+------ Recommend no more than 3 decimals; YMMV
+---- 200 tests with 0 issues
+---- Verified working!
 -- division ~90% working 
 ---- may sometimes produce to many decimals
 ------ this will not be fixed
