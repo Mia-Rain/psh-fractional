@@ -1,0 +1,76 @@
+<head>
+<link rel="icon" href="/favicon.png">
+<title>~git/psh-fractional</title>
+</head>
+<body class="vsc-initialized"><font color="#fffff">
+<pre style="background-color: black">    | ~ Licensed under Unlicense ~ Set it Free.
+    | ~ git clone ssh://g.posix.gay/psh-fractional --recursive
+\-\-\-\-+---------------------------------------------------------------
+    | ---
+    | psh-fractional
+    | -- fractional math in pure sh, successor to psh-float-micro
+    | ---
+    | Current Status
+    | -- addition 100% working
+    | ---- had some odd issues with decimals
+    | ---- had issues with "Illegal number"
+    | ------ eg: 18471.81672 + 27540.27237
+    | ---- carry system was rewritten
+    | ---- issues no longer present
+    | ---- 800+ tests with 0 issues
+    | ---- Verified working!
+    | -- subtraction ~90% working
+    | ---- had issues due to an edge case before: see last commit
+    | ------ Fixed
+    | ---- has an issue where $e in rad() somehow becomes malformed
+    | ------ eg: 23019.18605 - 1139
+    | ------ produces: 11629.18605
+    | ------ correct:  21880.18605
+    | ---- current method uses a system of removing the decimal from $1 & $2
+    | ---- and then subtracting them; (m1-m2)
+    | ---- the issue is likely in rad() as $((m1-m2)) is correct before
+    | ---- being handed to rad()
+    | -- multiplication 100% working
+    | ---- length issues when comparing to bc (produces additional decimals)
+    | ------ I am not going to attempt to fix this
+    | ------ it's really not an issue
+    | ---- Issues with larger numbers
+    | ------ Overflow occurs often
+    | ------ ./tester modified to prevent
+    | ------ Recommend no more than 3 decimals; YMMV
+    | ---- 200 tests with 0 issues
+    | ---- Verified working!
+    | -- division ~90% working 
+    | ---- did produce to many decimals
+    | ------ Fixed
+    | ---- did rarely places decimals in wrong places
+    | ------ Fixed
+    | ---- has issue with dividing by numbers <1 (eg 0.5)
+    | ------ Overflow issue
+    | ---
+    | Outer Usage
+    | -- it is recommended to use this library with psh-fc
+    | -- if you wish to compare numbers that it produces
+    | -- as decimal numbers are not considered numbers by posix sh
+    | ---- ssh://g.posix.gay/psh-fc
+    | ---
+    | Tester
+    | -- a tester is present at ./tester; it is ofc not pure sh as it compares with bc
+    | -- additionally using it requires that $RPATH is set to ?/psh-prng/ran
+    | ---- Edited to produce numbers of varying length
+    | ---- Edited to detect some overflow issues
+    | ---
+    |
+    |
+    |
+</pre>
+</font>
+<style>
+body {
+  font-family: monospace; /* better to use in system monospace */
+  padding: 100px;
+  font-size: 16px;
+  background: black;
+}
+</style>
+</body>
