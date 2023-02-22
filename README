@@ -3,14 +3,15 @@ psh-fractional
 -- fractional math in pure sh, successor to psh-float-micro
 ---
 Current Status
--- addition 100% working
+-- addition 80% working
 ---- had some odd issues with decimals
 ---- had issues with "Illegal number"
 ------ eg: 18471.81672 + 27540.27237
----- carry system was rewritten
----- issues no longer present
----- 800+ tests with 0 issues
----- Verified working!
+-- major bug within fractional addition
+---- numbers with a decimal starting with a 0
+---- won't add correctly do to issues with $(())
+---- a carrying system for this is needed
+---- this bug is likely present in all other methods
 -- subtraction ~90% working
 ---- had issues due to an edge case before: see last commit
 ------ Fixed

@@ -32,11 +32,17 @@
   until [ "${w2#0}" = "$w2" ]; do
     w2="${w2#0}"
   done # dash has issues when numbers have leading 0's
-  # zsh,bash,etc don't need this at all
   w1="${w1#0}"; w2="${w2#0}"
   wo="$((${w1:-0}+${w2:-0}))" # whole digit, this is preset and not redeclared
   # this is because we may need to carry
+  ##
+  # $(()) has issues with numbers that start with a 0
+  # this is because $(()) can operate in various different bases - see psh-prng
+  # to prevent this, the leading 0 must be removed before $(()) it used, and added back after
+  # this typically results in a painful mess of carrying
+  ## 
   o="$((f1+f2))"
+  ## there is a major bug here ^
   if [ "${#f1}" -ge "${#f2}" ]; then
     l="${#f1}"
   elif [ "${#f2}" -ge "${#f1}" ]; then
