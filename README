@@ -3,7 +3,7 @@ psh-fractional
 -- fractional math in pure sh, successor to psh-float-micro
 ---
 Current Status
--- addition 80% working
+-- addition 99% working
 ---- had some odd issues with decimals
 ---- had issues with "Illegal number"
 ------ eg: 18471.81672 + 27540.27237
@@ -12,6 +12,7 @@ Current Status
 ---- won't add correctly do to issues with $(())
 ---- a carrying system for this is needed
 ---- this bug is likely present in all other methods
+  >> FIXED!
 -- subtraction ~90% working
 ---- had issues due to an edge case before: see last commit
 ------ Fixed

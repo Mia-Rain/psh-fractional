@@ -1,6 +1,13 @@
 #!/bin/sh
 # add $2 to $1 and return
 # shellcheck disable=SC2086,SC2046,SC2166,SC2015
+
+ff(){
+  n=""; until [ ${#n} -ge $((${#1}-1)) ]; do
+    n=${n}0
+  done
+  echo 1$n  
+}
 [ -z "${1##*.*}" -o -z "${2##*.*}" ] && { # if float # dylanaraps/pure-sh-bible#check-if-a-number-is-a-float 
   # modified to check $1 & $2
   if [ -n "${1##*.*}" ]; then
@@ -24,8 +31,25 @@
   done
   #echo "$1 $2"
   f1="${1##*.}"; f2="${2##*.}" # whole is ${1%.$f1} # dot required
+  if [ "${#f1}" -lt "${#f2}" ]; then
+    until [ "${#f1}" -eq "${#f2}" ]; do
+      f1=${f1}0
+    done
+  elif [ "${#f2}" -lt "${#f1}" ]; then
+    until [ "${#f2}" -eq "${#f1}" ]; do
+      f2=${f2}0
+    done
+  fi
+  [ "${f1#0}" != "$f1" ] && {
+    f1i=1 # increment
+    f1="1${f1#0}"
+  }
+  [ "${f2#0}" != "$f2" ] && {
+    f2i=1 # increment
+    f2="1${f2#0}"
+  }
   # eq is $1+$2 -- $f1 + $f2 -- then add $1 & $2
-  w1="${1%."$f1"}"; w2="${2%."$f2"}"
+  w1="${1%."${1##*.}"}"; w2="${2%."${2##*.}"}"
   until [ "${w1#0}" = "$w1" ]; do
     w1="${w1#0}"
   done
@@ -40,9 +64,23 @@
   # this is because $(()) can operate in various different bases - see psh-prng
   # to prevent this, the leading 0 must be removed before $(()) it used, and added back after
   # this typically results in a painful mess of carrying
-  ## 
-  o="$((f1+f2))"
-  ## there is a major bug here ^
+  ##
+  # echo "${1##*.}|$f1 | $(ff ${1##*.})"
+  # echo "${2##*.}|$f2 | $(ff ${2##*.})"
+  o="$((f1+f2))"; f1ii=$(ff $f1); f2ii=$(ff $f2)
+  [ "$f1i" ] && : $((o-=${f1ii:-0}))
+  [ "$f2i" ] && : $((o-=${f2ii:-0}))
+  # if both decimals start with a 0 the result will be malformed by a few 0s
+  # fixing this requires extra ram
+  f1o=${1##*.}; f2o=${2##*.}; [ "${f1o#0}" != "${f1o}" -a "${f2o#0}" != "${f2o}" ] && {
+    n=${#f1o}; [ "${n}" -lt "${#f2o}" ] && n=${#f2o}
+    ##
+    while [ "$n" -gt 0 ]; do
+      o="0$o"  
+      : $((n-=1))
+    done
+  }
+  ## there was a major bug here ^
   if [ "${#f1}" -ge "${#f2}" ]; then
     l="${#f1}"
   elif [ "${#f2}" -ge "${#f1}" ]; then
